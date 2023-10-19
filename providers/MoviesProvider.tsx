@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
 import { MoviesContext } from '@/contexts/MovieContext';
-import { Movie } from '@/types/movie';
+import {  useQuery } from 'react-query';
 
 export function MoviesProvider({ children }) {
-  const [allMovies, setAllMovies] = useState<Movie[]>([]);
-
-  useEffect(() => {
-    async function fetchList() {
-      try {
-        const response = await fetch('/api/movies');
-        const movieList = await response.json();
-        setAllMovies(movieList);
-      } catch (err) {
-        console.log(err);
+  const fetchMovies = async () => {
+    try {
+      const response = await fetch('/api/movies');
+      if (!response.ok) {
+        throw new Error('Error during movies fetching');
       }
+      return response.json();
+    } catch (err) {
+      console.error('error fetching', err);
     }
-    fetchList();
-  }, []);
+  };
 
-  return <MoviesContext.Provider value={{allMovies, setAllMovies}}>{children}</MoviesContext.Provider>;
+  const { data: allMovies, isLoading, isError, error } = useQuery('allMovies', fetchMovies);
+
+  return (
+      <MoviesContext.Provider value={{ allMovies, isLoading, isError, error }}>{children}</MoviesContext.Provider>
+  );
 }

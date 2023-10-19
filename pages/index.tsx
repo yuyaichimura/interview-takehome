@@ -11,30 +11,14 @@ import Link from 'next/link';
 const inter = Inter({ subsets: ['latin'] });
 
 export default function MovieList() {
-  // const [allMovies, setAllMovies] = useState<Movie[]>([]);
-  const { allMovies } = useContext(MoviesContext);
+  const { allMovies, isLoading } = useContext(MoviesContext);
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const router = useRouter();
   const { query } = router;
 
-  /*   useEffect(() => {
-    async function fetchList() {
-      try {
-        const response = await fetch('/api/movies');
-        const movieList = await response.json();
-        setAllMovies(movieList);
-        setFilteredMovies(movieList);
-      } catch (err) {
-        console.error(err);
-        throw new Error('Error fetching movie list');
-      }
-    }
-    fetchList();
-  }, []); */
-
   useEffect(() => {
     let filters: Filters = {};
-    if (allMovies.length > 0) {
+    if (!isLoading && allMovies.length > 0) {
       filters = {
         ...(query.startYear && { startYear: Number(query.startYear) }),
         ...(query.endYear && { endYear: Number(query.endYear) }),
@@ -45,13 +29,12 @@ export default function MovieList() {
     }
     const filtered = getFilteredMovies(allMovies, filters);
     setFilteredMovies(filtered);
-  }, [allMovies, query]);
+  }, [allMovies, query, isLoading]);
 
   const onFilterChange = (filters: Filters) => {
     // Implement me! What should happen when the filters change?
-    if (!filters.startYear && !filters.endYear && !filters.genres?.length) {
+    if (!filters || (!filters.startYear && !filters.endYear && !filters.genres?.length)) {
       router.push('');
-      setFilteredMovies(allMovies);
       return;
     }
     const queryArr = [];
@@ -69,13 +52,16 @@ export default function MovieList() {
     }
   };
 
-  const getFilteredMovies = (movies: Movie[], filters: Filters) => {
-    return movies.filter((movie) => {
-      const isMovieInGenre = !filters.genres?.length || movie.genres.some((genre) => filters.genres?.includes(genre));
+  const getFilteredMovies = (movies: Movie[] = [], filters: Filters) => {
+    const result = movies.filter((movie) => {
+      const isMovieInGenre =
+        !filters.genres?.length ||
+        movie.genres.map((m) => m.toLowerCase()).some((genre) => filters.genres?.includes(genre.toLowerCase()));
       const isMovieInYearRange =
         (!filters.startYear || movie.year >= filters.startYear) && (!filters.endYear || movie.year <= filters.endYear);
       return isMovieInGenre && isMovieInYearRange;
     });
+    return result;
   };
 
   return (
@@ -86,15 +72,11 @@ export default function MovieList() {
       <div className="w-full">
         <table className="w-full table-auto">
           <thead className="border-b-2 font-medium border-neutral-400">
-            <th scope="col" className="px-10 py-4 text-left">
-              Title
-            </th>
-            <th scope="col" className="px-10 py-4 text-left">
-              Year
-            </th>
-            <th scope="col" className="px-10 py-4 text-left">
-              Genres
-            </th>
+            <tr>
+              <th className="px-10 py-4 text-left">Title</th>
+              <th className="px-10 py-4 text-left">Year</th>
+              <th className="px-10 py-4 text-left">Genres</th>
+            </tr>
           </thead>
           <tbody>
             {filteredMovies.map((movie) => (

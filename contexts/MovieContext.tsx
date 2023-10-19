@@ -3,10 +3,14 @@ import { createContext } from 'react';
 
 export const MoviesContext = createContext<MoviesListInterface>({
   allMovies: [],
-  setAllMovies: (movies: Movie[]) => {},
+  isError: false,
+  isLoading: false,
+  error: undefined,
 });
 
 interface MoviesListInterface {
   allMovies: Movie[];
-  setAllMovies: (movies: Movie[]) => void;
+  isError?: boolean;
+  isLoading?: boolean;
+  error?: any;
 }
