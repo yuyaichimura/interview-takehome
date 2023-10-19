@@ -12,4 +12,15 @@ const translator = createJsonTranslator<FilterResponse>(model, schema, 'FilterRe
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Implement me!
+  const { query } = req.query;
+  if (!query) {
+    return res.status(200).send(JSON.stringify({}));
+  }
+  const response = await translator.translate(query as string);
+  if (!response.success) {
+    return res.status(500).json({ error: response.message });
+  }
+
+  const filter = response.data;
+  return res.status(200).send(JSON.stringify(filter));
 }
